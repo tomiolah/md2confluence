@@ -16,9 +16,9 @@ A simple NodeJS program, that converts Markdown files to Atlassian Confluence sy
 - bold ✅
 - italic ✅
 - hyperlinks ✅
-- lists (with tabs)
-  - unordered
-  - ordered / numbered
+- lists (with tabs) ✅
+  - unordered ✅
+  - ordered / numbered ✅
 - images
 - deleted (~xyz~ => --xyz--)
 - tables

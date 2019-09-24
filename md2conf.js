@@ -1,5 +1,11 @@
 const fs = require('fs');
 
+const indentCharacter = '  '; // by default 2 spaces
+
+function count(arr, obj) {
+  return (arr.filter((value) => value === obj)).length;
+}
+
 function usage() {
   console.log(`\n\nUsage:\n\t${process.argv[1]} <markdown_file> [-o <output_filename_or_path>]\n\n`);
 }
@@ -9,6 +15,9 @@ function readFile(path) {
   return buff.toString();
 }
 
+function countIndent(input) {
+  return count(input.split(indentCharacter), '');
+}
 
 
 
@@ -17,7 +26,8 @@ function readFile(path) {
 
 
 
-// Tranform Heading line to Confluence heading
+
+// Transform Heading line to Confluence heading
 function headings(input, callback) {
   let line = input;
   if (/^#{1,}[a-zA-Z_ `-]+$/.test(line)) {
@@ -62,11 +72,35 @@ function code_block(input, callback) {
 // Transform hyperlinks
 function hyperlinks(input, callback) {
   let line = input;
-  line = line.replace(/\[(\S+)\]\((\S+)\)/, '[$1|$2]');
-  line = line.replace(/\s+(http[s]?:\/\/[a-zA-Z\.0-9_?\/=-]+)(\s+|$)/gm,' [$1] ');
+  if (!/http[s]?:\/\/[a-zA-Z\.0-9_?\/=-]+/gm.test(line)) return (callback) ? callback(line) : line;
+  if (/"http[s]?:\/\/[a-zA-Z\.0-9_?\/=-]+"/gm.test(line)) return (callback) ? callback(line) : line;
+  line = line.replace(/\[(.+)\]\((http[s]?:\/\/[a-zA-Z\.0-9_?\/=-]+)\)/g, '[$1|$2]');
+  line = line.replace(/(.+)(http[s]?:\/\/[a-zA-Z\.0-9_?\/=-]+)(.*)/g,'$1[$2]$3');
   return (callback) ? callback(line) : line;
 }
 
+// Wrapper function for list transformation
+function lists(input, callback) {
+  let line = input;
+
+  // Skip empty lines or lines that are not lists
+  if (line === '') return (callback) ? callback(line) : line;
+  if (!/^ *[0-9\-]+[\.]*.*$/g.test(line)) return (callback) ? callback(line) : line;
+
+  // Count indentation - default = 2 spaces
+  let indent = countIndent(line);
+  // Unindent line
+  let temp = new RegExp(indentCharacter, 'g');
+  line = line.replace(temp, '');
+
+  // Check if ordered or not
+  let ordered = /[0-9]{1}/.test(line.split('')[0]);
+  line = line.split('');
+  line.splice(0, ((ordered) ? 2 : 1));
+  line = line.join('');
+  line = ((ordered) ? '#' : '*').repeat(indent + 1) + line;
+  return (callback) ? callback(line) : line;
+}
 
 
 
@@ -77,6 +111,7 @@ function hyperlinks(input, callback) {
 // Tranform MD syntax to Confluence
 function transform(input) {
   let output = '';
+
   input.forEach(line => {
     let result = line;
 
@@ -85,8 +120,9 @@ function transform(input) {
         re2 => italic(re2,
             re3 => bold(re3,
               re4 => code_block(re4,
-                re5 => hyperlinks(re5)
-    )))));
+                re5 => hyperlinks(re5,
+                  re6 => lists(re6)
+    ))))));
 
     if (output !== '') output += '\n';
     output += result;
