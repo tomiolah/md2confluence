@@ -75,8 +75,8 @@ function hyperlinks(input, callback) {
   if (!/http[s]?:\/\/[a-zA-Z\.0-9_?\/=-]+/gm.test(line)) return (callback) ? callback(line) : line;
   if (/"http[s]?:\/\/[a-zA-Z\.0-9_?\/=-]+"/gm.test(line)) return (callback) ? callback(line) : line;
   if (/!\[.*\]\(http[s]?:\/\/[a-zA-Z\.0-9_?\/=-]+.*\)"/gm.test(line)) return (callback) ? callback(line) : line;
-  line = line.replace(/([^!]{1,})\[(.+)\]\((http[s]?:\/\/[a-zA-Z\.0-9_?\/=-]+)\)/g, '$1[$2|$3]');
-  line = line.replace(/(.*)([^\[\|]+)(http[s]?:\/\/[a-zA-Z\.0-9_?\/=-]+)([^\]]+)/g,'$1$2[$3]$4');
+  line = line.replace(/[^!]{1,}\[(.+)\]\((http[s]?:\/\/[a-zA-Z\.0-9_?\/=-]+)\)/g, '[$1|$2]');
+  line = line.replace(/(.*)(http[s]?:\/\/[a-zA-Z\.0-9_?\/=-]+)(.*)/g,'$1[$2]$3');
   return (callback) ? callback(line) : line;
 }
 
@@ -103,6 +103,14 @@ function lists(input, callback) {
   return (callback) ? callback(line) : line;
 }
 
+// Transform inline images
+function images(input, callback) {
+  let line = input;
+
+  line = line.replace(/!\[(.*)\]\(\[(http[s]?:\/\/[a-zA-Z\.0-9_?\/=-]+)\] "(.*)"\)/g,'!$2|alt="$1",title="$3"!');
+  return (callback) ? callback(line) : line;
+}
+
 
 
 
@@ -122,8 +130,9 @@ function transform(input) {
             re3 => bold(re3,
               re4 => code_block(re4,
                 re5 => hyperlinks(re5,
-                  re6 => lists(re6)
-    ))))));
+                  re6 => lists(re6,
+                    re7 => images(re7)
+    )))))));
 
     if (output !== '') output += '\n';
     output += result;
