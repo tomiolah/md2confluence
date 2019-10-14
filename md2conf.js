@@ -64,8 +64,8 @@ function bold(input, callback) {
 // Transform code-blocks
 function code_block(input, callback) {
   let line  = input;
-  line = line.replace(/^[\`]{3}([a-zA-Z0-9]+)$/g, '{code:linenumbers=true|language=$1}');
-  line = line.replace(/^([\s]*)```$/g,'$1{code}');
+  line = line.replace(/^(.*)[\`]{3}([a-zA-Z0-9]+)$/g, '$1{code:linenumbers=true|language=$2}');
+  line = line.replace(/^(.*)([\s]*)```$/g,'$1$2{code}');
   return (callback) ? callback(line) : line;
 }
 
