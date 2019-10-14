@@ -74,8 +74,9 @@ function hyperlinks(input, callback) {
   let line = input;
   if (!/http[s]?:\/\/[a-zA-Z\.0-9_?\/=-]+/gm.test(line)) return (callback) ? callback(line) : line;
   if (/"http[s]?:\/\/[a-zA-Z\.0-9_?\/=-]+"/gm.test(line)) return (callback) ? callback(line) : line;
-  line = line.replace(/\[(.+)\]\((http[s]?:\/\/[a-zA-Z\.0-9_?\/=-]+)\)/g, '[$1|$2]');
-  line = line.replace(/(.+)(http[s]?:\/\/[a-zA-Z\.0-9_?\/=-]+)(.*)/g,'$1[$2]$3');
+  if (/!\[.*\]\(http[s]?:\/\/[a-zA-Z\.0-9_?\/=-]+.*\)"/gm.test(line)) return (callback) ? callback(line) : line;
+  line = line.replace(/([^!]{1,})\[(.+)\]\((http[s]?:\/\/[a-zA-Z\.0-9_?\/=-]+)\)/g, '$1[$2|$3]');
+  line = line.replace(/(.*)([^\[\|]+)(http[s]?:\/\/[a-zA-Z\.0-9_?\/=-]+)([^\]]+)/g,'$1$2[$3]$4');
   return (callback) ? callback(line) : line;
 }
 
